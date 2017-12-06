@@ -2,19 +2,6 @@
 #include "stdlib.h"
 #include "oledfont.h"  	 
 #include "delay.h"
-//////////////////////////////////////////////////////////////////////////////////	 
-//本程序只供学习使用，未经作者许可，不得用于其它任何用途
-//ALIENTEK STM32F407开发板
-//OLED 驱动代码	   
-//正点原子@ALIENTEK
-//技术论坛:www.openedv.com
-//创建日期:2014/5/4
-//版本：V1.0
-//版权所有，盗版必究。
-//Copyright(C) 广州市星翼电子科技有限公司 2014-2024
-//All rights reserved									  
-////////////////////////////////////////////////////////////////////////////////// 	  
- 
 
 //OLED的显存
 //存放格式如下.
@@ -41,7 +28,7 @@ void OLED_Refresh_Gram(void)
 	}   
 }
 
-//向SSD1306写入一个字节。
+//向SSD1309写入一个字节。
 //dat:要写入的数据/命令
 //cmd:数据/命令标志 0,表示命令;1,表示数据;
 void OLED_WR_Byte(u8 dat,u8 cmd)
@@ -124,10 +111,8 @@ void OLED_ShowChar(u8 x,u8 y,u8 chr,u8 size,u8 mode)
 		if(size==12)temp=asc2_1206[chr][t]; 	 	//调用1206字体
 		else if(size==16)temp=asc2_1608[chr][t];	//调用1608字体
 		else if(size==24)temp=asc2_2412[chr][t];	//调用2412字体
-		else if(size==6)temp=F6x8[chr][t];	//调用2412字体
-		else if(size==8)temp=F8X16[chr];	//调用2412字体
 		else return;								//没有的字库
-        for(t1=0;t1<8;t1++)
+    for(t1=0;t1<8;t1++)
 		{
 			if(temp&0x80)OLED_DrawPoint(x,y,mode);
 			else OLED_DrawPoint(x,y,!mode);
@@ -190,7 +175,7 @@ void OLED_ShowString(u8 x,u8 y,const u8 *p,u8 size)
     }  
 	
 }	
-//初始化SSD1306					    
+//初始化SSD1309				    
 void OLED_Init(void)
 { 	 		 
   GPIO_InitTypeDef  GPIO_InitStructure;
@@ -212,10 +197,8 @@ void OLED_Init(void)
 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_6|GPIO_Pin_7;	
 	GPIO_Init(GPIOD, &GPIO_InitStructure);//初始化		
 
-	
 	OLED_SDIN=1;
 	OLED_SCLK=1;
-	
 	
 	OLED_CS=1;
 	OLED_RS=1;	 
@@ -224,9 +207,14 @@ void OLED_Init(void)
 	delay_ms(100);
 	OLED_RST=1; 
 					  
+	OLED_WR_Byte(0xFD,OLED_CMD); //Command Lock
+	OLED_WR_Byte(0x12,OLED_CMD); //	
+	
 	OLED_WR_Byte(0xAE,OLED_CMD); //关闭显示
 	OLED_WR_Byte(0xD5,OLED_CMD); //设置时钟分频因子,震荡频率
-	OLED_WR_Byte(80,OLED_CMD);   //[3:0],分频因子;[7:4],震荡频率
+//	OLED_WR_Byte(80,OLED_CMD);   //[3:0],分频因子;[7:4],震荡频率
+	OLED_WR_Byte(0xA0,OLED_CMD); //
+	
 	OLED_WR_Byte(0xA8,OLED_CMD); //设置驱动路数
 	OLED_WR_Byte(0X3F,OLED_CMD); //默认0X3F(1/64) 
 	OLED_WR_Byte(0xD3,OLED_CMD); //设置显示偏移
@@ -239,61 +227,27 @@ void OLED_Init(void)
 	OLED_WR_Byte(0x20,OLED_CMD); //设置内存地址模式
 	OLED_WR_Byte(0x02,OLED_CMD); //[1:0],00，列地址模式;01，行地址模式;10,页地址模式;默认10;
 	OLED_WR_Byte(0xA1,OLED_CMD); //段重定义设置,bit0:0,0->0;1,0->127;
-	OLED_WR_Byte(0xC0,OLED_CMD); //设置COM扫描方向;bit3:0,普通模式;1,重定义模式 COM[N-1]->COM0;N:驱动路数
+//	OLED_WR_Byte(0xC0,OLED_CMD); //设置COM扫描方向;bit3:0,普通模式;1,重定义模式 COM[N-1]->COM0;N:驱动路数
+	OLED_WR_Byte(0xC0,OLED_CMD); //Set COM Output Scan Direction / C8
+	
 	OLED_WR_Byte(0xDA,OLED_CMD); //设置COM硬件引脚配置
 	OLED_WR_Byte(0x12,OLED_CMD); //[5:4]配置
 		 
 	OLED_WR_Byte(0x81,OLED_CMD); //对比度设置
-	OLED_WR_Byte(0xEF,OLED_CMD); //1~255;默认0X7F (亮度设置,越大越亮)
+//	OLED_WR_Byte(0xEF,OLED_CMD); //1~255;默认0X7F (亮度设置,越大越亮)
+	OLED_WR_Byte(0xFF,OLED_CMD); 
+	
 	OLED_WR_Byte(0xD9,OLED_CMD); //设置预充电周期
-	OLED_WR_Byte(0xf1,OLED_CMD); //[3:0],PHASE 1;[7:4],PHASE 2;
+//	OLED_WR_Byte(0xf1,OLED_CMD); //[3:0],PHASE 1;[7:4],PHASE 2;
+	OLED_WR_Byte(0x82,OLED_CMD); //
+	
 	OLED_WR_Byte(0xDB,OLED_CMD); //设置VCOMH 电压倍率
-	OLED_WR_Byte(0x30,OLED_CMD); //[6:4] 000,0.65*vcc;001,0.77*vcc;011,0.83*vcc;
-
+//	OLED_WR_Byte(0x30,OLED_CMD); //[6:4] 000,0.65*vcc;001,0.77*vcc;011,0.83*vcc;
+	OLED_WR_Byte(0x34,OLED_CMD);
+	
 	OLED_WR_Byte(0xA4,OLED_CMD); //全局显示开启;bit0:1,开启;0,关闭;(白屏/黑屏)
 	OLED_WR_Byte(0xA6,OLED_CMD); //设置显示方式;bit0:1,反相显示;0,正常显示	    						   
 	OLED_WR_Byte(0xAF,OLED_CMD); //开启显示	 
-
-
-
-//	OLED_WR_Byte(0xFD,OLED_CMD); //Command Lock
-//	OLED_WR_Byte(0x12,OLED_CMD); //		
-//  
-//	OLED_WR_Byte(0xAE,OLED_CMD); //Set Display Off 
-//	
-//	OLED_WR_Byte(0xD5,OLED_CMD); //Set Display Clock Divide Ratio/Oscillator Frequency
-//	OLED_WR_Byte(0xA0,OLED_CMD); //
-//	
-//	OLED_WR_Byte(0xA8,OLED_CMD); //Set Multiplex Ratio 
-//	OLED_WR_Byte(0x3F,OLED_CMD); // 
-//	
-//	OLED_WR_Byte(0xD3,OLED_CMD); //Set Display Offset
-//	OLED_WR_Byte(0X00,OLED_CMD); //
-//	
-//	OLED_WR_Byte(0x40,OLED_CMD); //Set Display Start Line 
-//	
-//	OLED_WR_Byte(0XA1,OLED_CMD); //Set Segment Re-Map
-
-//	OLED_WR_Byte(0xC8,OLED_CMD); //Set COM Output Scan Direction 
-//	
-//	OLED_WR_Byte(0xDA,OLED_CMD); //Set COM Pins Hardware Configuration
-//	OLED_WR_Byte(0x12,OLED_CMD); //
-//	
-//	OLED_WR_Byte(0x81,OLED_CMD); //Set Current Control 
-//	OLED_WR_Byte(0xFF,OLED_CMD); //
-//	
-//	OLED_WR_Byte(0xD9,OLED_CMD); //Set Pre-Charge Period  
-//	OLED_WR_Byte(0x82,OLED_CMD); //
-//	
-//	OLED_WR_Byte(0xDB,OLED_CMD); //Set VCOMH Deselect Level 	 
-//	OLED_WR_Byte(0x34,OLED_CMD); //
-//	
-//	OLED_WR_Byte(0xA4,OLED_CMD); //Set Entire Display On/Off
-//	
-//	OLED_WR_Byte(0xA6,OLED_CMD); //Set Normal/Inverse Display 
-
-//	
-//	OLED_WR_Byte(0xAF,OLED_CMD); //Set Display On
 
 	OLED_Clear();
 }  
